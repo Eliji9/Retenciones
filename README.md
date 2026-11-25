@@ -12,7 +12,7 @@ Reporte de retenciones en RAP / ABAP Cloud (S/4HANA Cloud Private).
 
 ## Ajustes
 
-- Nueva columna **CAI**: el `CONSEC` se obtiene de `ZI_COM_PFA_BASE` (sociedad, `BELNR`, `MIROGJAHR`) o, si no está ahí, de `ZI_RE_PFA_H` (`UUID`); con ese valor se lee el CAI de `ZPFA_FACT_CAI`.
+- Nueva columna **CAI**: el `CONSEC` se obtiene de `ZI_COM_PFA_BASE` (sociedad, `BELNR`, `MIROGJAHR`) o, si no está ahí, de `ZI_RE_PFA_H` (`CompanyCode`, `DocumentNumber`, `DocumentYear` → `Consec`); con ese valor se lee el CAI de `ZPFA_FACT_CAI`.
 - El filtro **Documento Contable** ahora se aplica (antes la DPC no lo leía).
 - `enriquecer_datos_z`: la lectura de `ZPFA_DATA` usa sociedad + documento + ejercicio (antes solo sociedad).
 - Llave de la entidad ampliada con `AccountingDocumentItem` y `WithholdingTaxType` para evitar filas con llave repetida en Fiori.

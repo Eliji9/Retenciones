@@ -447,7 +447,7 @@ CLASS zcl_fiap_ret_log IMPLEMENTATION.
     " CAI por factura (HN): ZPFA_FACT_CAI se lee por CONSEC.
     " El CONSEC se obtiene con Sociedad + Documento FI + Ejercicio desde:
     "   1) ZI_COM_PFA_BASE (COMPANYCODE / BELNR / MIROGJAHR -> CONSEC)
-    "   2) ZI_RE_PFA_H     (Sociedad / Nº doc. / Ejercicio  -> UUID) si no está en 1)
+    "   2) ZI_RE_PFA_H     (CompanyCode / DocumentNumber / DocumentYear -> Consec) si no está en 1)
     TYPES: BEGIN OF ty_doc_consec,
              companycode        TYPE bukrs,
              accountingdocument TYPE belnr_d,
@@ -482,24 +482,23 @@ CLASS zcl_fiap_ret_log IMPLEMENTATION.
     ENDLOOP.
 
     " --- 2. ZI_RE_PFA_H (solo documentos que no se encontraron en 1) ---
-    " CONFIRMAR nombres de campos de ZI_RE_PFA_H en ADT (en SE16 se ven
-    " como UUID / Sociedad / Nº doc. / Ej.)
-    SELECT uuid, companycode, accountingdocument, fiscalyear
+    "     CompanyCode / DocumentNumber (belnr) / DocumentYear (gjahr) -> Consec
+    SELECT consec, companycode, documentnumber, documentyear
       FROM zi_re_pfa_h
       FOR ALL ENTRIES IN @lt_docs
-      WHERE companycode        = @lt_docs-companycode
-        AND accountingdocument = @lt_docs-accountingdocument
-        AND fiscalyear         = @lt_docs-fiscalyear
+      WHERE companycode    = @lt_docs-companycode
+        AND documentnumber = @lt_docs-accountingdocument
+        AND documentyear   = @lt_docs-fiscalyear
       INTO TABLE @DATA(lt_reh).
 
-    LOOP AT lt_reh INTO DATA(ls_reh) WHERE uuid IS NOT INITIAL.
+    LOOP AT lt_reh INTO DATA(ls_reh) WHERE consec IS NOT INITIAL.
       IF NOT line_exists( lt_doc_consec[ companycode        = ls_reh-companycode
-                                         accountingdocument = ls_reh-accountingdocument
-                                         fiscalyear         = ls_reh-fiscalyear ] ).
+                                         accountingdocument = ls_reh-documentnumber
+                                         fiscalyear         = ls_reh-documentyear ] ).
         INSERT VALUE #( companycode        = ls_reh-companycode
-                        accountingdocument = ls_reh-accountingdocument
-                        fiscalyear         = ls_reh-fiscalyear
-                        consec             = ls_reh-uuid ) INTO TABLE lt_doc_consec.
+                        accountingdocument = ls_reh-documentnumber
+                        fiscalyear         = ls_reh-documentyear
+                        consec             = ls_reh-consec ) INTO TABLE lt_doc_consec.
       ENDIF.
     ENDLOOP.
 
