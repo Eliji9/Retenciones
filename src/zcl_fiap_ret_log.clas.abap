@@ -9,6 +9,7 @@ CLASS zcl_fiap_ret_log DEFINITION
              sociedad  TYPE RANGE OF bukrs,
              acreedor  TYPE RANGE OF lifnr,
              documento TYPE RANGE OF belnr_d,
+             posicion  TYPE RANGE OF buzei,
              tipo_ret  TYPE RANGE OF witht,
              ind_ret   TYPE RANGE OF wt_withcd,
              ejercicio TYPE gjahr,
@@ -136,6 +137,10 @@ CLASS zcl_fiap_ret_log IMPLEMENTATION.
   METHOD obtiene_datos.
 
     DATA(lt_bukrs) = determinar_sociedades( is_filtros ).
+    " Sin sociedades válidas no se lee nada (un rango vacío traería todas)
+    IF lt_bukrs IS INITIAL.
+      RETURN.
+    ENDIF.
     DATA(lt_blart) = determinar_clase_doc_por_pais( is_filtros ).
 
     leer_retenciones(
@@ -155,9 +160,6 @@ CLASS zcl_fiap_ret_log IMPLEMENTATION.
                          CHANGING ct_result  = mt_with ).
     enriquecer_cai( CHANGING ct_result = mt_with ).
 
-    LOOP AT mt_with ASSIGNING FIELD-SYMBOL(<fs_with>).
-      <fs_with>-country = is_filtros-pais.
-    ENDLOOP.
     SORT mt_with BY companycode accountingdocument fiscalyear
                     accountingdocumentitem withholdingtaxtype.
     rt_result = mt_with.
@@ -167,9 +169,16 @@ CLASS zcl_fiap_ret_log IMPLEMENTATION.
 
   METHOD determinar_sociedades.
     " Equivalente a: SELECT bukrs butxt FROM t001 ...
+    " La lectura del detalle (Object Page) llega solo con la llave,
+    " sin País: en ese caso no se filtra por país.
+    DATA lr_pais TYPE RANGE OF land1.
+    IF is_filtros-pais IS NOT INITIAL.
+      lr_pais = VALUE #( ( sign = 'I' option = 'EQ' low = is_filtros-pais ) ).
+    ENDIF.
+
     SELECT companycode, companycodename
       FROM i_companycode
-      WHERE country      = @is_filtros-pais
+      WHERE country      IN @lr_pais
         AND companycode  IN @is_filtros-sociedad
       INTO TABLE @DATA(lt_t001).
 
@@ -229,6 +238,7 @@ CLASS zcl_fiap_ret_log IMPLEMENTATION.
         AND withholdingtaxtype    IN @is_filtros-tipo_ret
         AND withholdingtaxcode    IN @is_filtros-ind_ret
         AND accountingdocument    IN @is_filtros-documento
+        AND accountingdocumentitem IN @is_filtros-posicion
         AND fiscalyear             = @is_filtros-ejercicio
       INTO TABLE @DATA(lt_wt).
 
@@ -429,7 +439,7 @@ CLASS zcl_fiap_ret_log IMPLEMENTATION.
     SORT lt_result BY companycode.
     DELETE ADJACENT DUPLICATES FROM lt_result COMPARING companycode.
     IF lt_result IS NOT INITIAL.
-      SELECT companycode, companycodename
+      SELECT companycode, companycodename, country
         FROM i_companycode
         FOR ALL ENTRIES IN @lt_result
         WHERE companycode EQ @lt_result-companycode
@@ -439,6 +449,7 @@ CLASS zcl_fiap_ret_log IMPLEMENTATION.
         READ TABLE lt_t001 INTO DATA(ls_t001) WITH KEY companycode = <fs_res>-companycode.
         IF sy-subrc EQ 0.
           <fs_res>-companycodename = ls_t001-companycodename.
+          <fs_res>-country         = ls_t001-country.
         ENDIF.
       ENDLOOP.
     ENDIF.

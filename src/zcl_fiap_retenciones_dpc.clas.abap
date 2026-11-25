@@ -36,6 +36,9 @@ METHOD if_rap_query_provider~select.
     IF line_exists( lt_ranges[ name = 'ACCOUNTINGDOCUMENT' ] ).
        ls_filtros-documento = CORRESPONDING #( lt_ranges[ name = 'ACCOUNTINGDOCUMENT' ]-range ).
     ENDIF.
+    IF line_exists( lt_ranges[ name = 'ACCOUNTINGDOCUMENTITEM' ] ).
+       ls_filtros-posicion = CORRESPONDING #( lt_ranges[ name = 'ACCOUNTINGDOCUMENTITEM' ]-range ).
+    ENDIF.
     IF line_exists( lt_ranges[ name = 'SUPPLIER' ] ).
        ls_filtros-acreedor = CORRESPONDING #( lt_ranges[ name = 'SUPPLIER' ]-range ).
     ENDIF.
