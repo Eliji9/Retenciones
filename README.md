@@ -16,4 +16,5 @@ Reporte de retenciones en RAP / ABAP Cloud (S/4HANA Cloud Private).
 - El filtro **Documento Contable** ahora se aplica (antes la DPC no lo leía).
 - `enriquecer_datos_z`: la lectura de `ZPFA_DATA` usa sociedad + documento + ejercicio (antes solo sociedad).
 - Llave de la entidad ampliada con `AccountingDocumentItem` y `WithholdingTaxType` para evitar filas con llave repetida en Fiori.
+- La DPC procesa el ordenamiento de columnas (`get_sort_elements`) y la búsqueda libre (`get_search_expression`).
 - Pendiente: formato con guiones de Núm. Doc. Factura (falta definir cuándo aplicarlo).

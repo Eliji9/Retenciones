@@ -58,7 +58,31 @@ METHOD if_rap_query_provider~select.
     CREATE OBJECT mo_logica.
     lt_result = mo_logica->obtiene_datos( ls_filtros ).
 
-    "manejo de paginación"
+    " --- 3. Búsqueda libre (campo "Buscar") ---
+    DATA(lv_search) = io_request->get_search_expression( ).
+    IF lv_search IS NOT INITIAL.
+      REPLACE ALL OCCURRENCES OF '"' IN lv_search WITH ``.
+      REPLACE ALL OCCURRENCES OF '*' IN lv_search WITH ``.
+      CONDENSE lv_search.
+      IF lv_search IS NOT INITIAL.
+        DELETE lt_result WHERE NOT (    suppliername       CS lv_search
+                                     OR supplier           CS lv_search
+                                     OR accountingdocument CS lv_search
+                                     OR supplierinvoice    CS lv_search ).
+      ENDIF.
+    ENDIF.
+
+    " --- 4. Ordenamiento ($orderby) ---
+    DATA(lt_sort) = io_request->get_sort_elements( ).
+    IF lt_sort IS NOT INITIAL.
+      DATA(lt_orden) = VALUE abap_sortorder_tab(
+                         FOR ls_sort IN lt_sort
+                         ( name       = ls_sort-element_name
+                           descending = ls_sort-descending ) ).
+      SORT lt_result BY (lt_orden).
+    ENDIF.
+
+    " --- 5. Paginación ---
     DATA(lo_paging) = io_request->get_paging(  ).
     DATA(lv_offset) = lo_paging->get_offset(  ).
     DATA(lv_page_size) = lo_paging->get_page_size(  ).
@@ -70,8 +94,12 @@ METHOD if_rap_query_provider~select.
                                               TO lv_offset + lv_page_size ( ls ) ).
        lt_result = lt_pag.
     ENDIF.
-    io_response->set_total_number_of_records( lv_total ).
-    io_response->set_data( lt_result ).
+    IF io_request->is_total_numb_of_rec_requested( ).
+      io_response->set_total_number_of_records( lv_total ).
+    ENDIF.
+    IF io_request->is_data_requested( ).
+      io_response->set_data( lt_result ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
