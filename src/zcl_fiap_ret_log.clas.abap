@@ -35,7 +35,7 @@ CLASS zcl_fiap_ret_log DEFINITION
              accountingdocumentitem  TYPE buzei,
              fiscalyear              TYPE n LENGTH 4,
              documenttype            TYPE blart,
-             supplierinvoice         TYPE xblnr1,
+             supplierinvoice         TYPE c LENGTH 20, "xblnr1 + guiones
              taxreference            TYPE char36,
              cai                     TYPE c LENGTH 40,
              documentdate            TYPE bldat,
@@ -126,6 +126,9 @@ CLASS zcl_fiap_ret_log DEFINITION
 
     METHODS enriquecer_cai
       CHANGING ct_result TYPE tt_retenciones.
+    METHODS formatear_num_factura
+      IMPORTING iv_factura        TYPE ty_retencion-supplierinvoice
+      RETURNING VALUE(rv_factura) TYPE ty_retencion-supplierinvoice.
     METHODS obtener_material
       IMPORTING it_bkpf        TYPE tt_bkpf
       RETURNING VALUE(rt_ekbe) TYPE tt_ebke.
@@ -533,11 +536,30 @@ CLASS zcl_fiap_ret_log IMPLEMENTATION.
           WITH KEY consec = ls_dc-consec BINARY SEARCH.
         IF sy-subrc = 0 AND ls_cai-cai IS NOT INITIAL.
           <fs_res>-cai = ls_cai-cai.
+          " Factura con CAI (HN): formato 000-000-00-00000000
+          <fs_res>-supplierinvoice = formatear_num_factura( <fs_res>-supplierinvoice ).
           EXIT.
         ENDIF.
       ENDLOOP.
     ENDLOOP.
   ENDMETHOD.
+  METHOD formatear_num_factura.
+    " Formato SAR Honduras: establecimiento(3)-punto emisión(3)-tipo doc(2)-correlativo(8)
+    " Solo aplica si el número tiene exactamente 16 dígitos; si no, se deja igual.
+    DATA lv_num TYPE string.
+
+    lv_num = iv_factura.
+    REPLACE ALL OCCURRENCES OF `-` IN lv_num WITH ``.
+    CONDENSE lv_num NO-GAPS.
+
+    IF strlen( lv_num ) = 16 AND lv_num CO '0123456789'.
+      rv_factura = |{ lv_num(3) }-{ lv_num+3(3) }-{ lv_num+6(2) }-{ lv_num+8(8) }|.
+    ELSE.
+      rv_factura = iv_factura.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD obtener_material.
     DATA(lt_bkpf) = it_bkpf.
     SORT lt_bkpf BY transactioncode.

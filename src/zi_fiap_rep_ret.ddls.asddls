@@ -108,7 +108,7 @@ define root custom entity ZI_FIAP_REP_RET
   @EndUserText.label: 'Núm. Doc. Factura'
   @UI.lineItem: [{ position: 50 }]
       @UI.fieldGroup: [{ qualifier: 'Documento', position: 110 }]
-  SupplierInvoice              : abap.char(16);
+  SupplierInvoice              : abap.char(20);
   @EndUserText.label: 'Referencia Fiscal'
   @UI.lineItem: [{ position: 51 }]
       @UI.fieldGroup: [{ qualifier: 'Documento', position: 130 }]

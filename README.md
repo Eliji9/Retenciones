@@ -18,4 +18,4 @@ Reporte de retenciones en RAP / ABAP Cloud (S/4HANA Cloud Private).
 - Llave de la entidad ampliada con `AccountingDocumentItem` y `WithholdingTaxType` para evitar filas con llave repetida en Fiori.
 - La DPC procesa el ordenamiento de columnas (`get_sort_elements`) y la búsqueda libre (`get_search_expression`).
 - Detalle (Object Page): la lectura por llave funciona sin el filtro País, y la entidad define encabezado y secciones Documento / Proveedor / Retención.
-- Pendiente: formato con guiones de Núm. Doc. Factura (falta definir cuándo aplicarlo).
+- Núm. Doc. Factura con formato `000-000-00-00000000` solo en las líneas que tienen CAI (si el número tiene 16 dígitos).
